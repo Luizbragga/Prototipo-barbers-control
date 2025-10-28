@@ -1,52 +1,63 @@
-// app/(tabs)/index.tsx
+// app/(admin)/checkout-plan.tsx
 import { BC } from "@/app/theme";
 import { Text } from "@/components/Themed";
 import { Link } from "expo-router";
 import { Pressable, View } from "react-native";
 
-export default function AgendarStep1() {
+export default function CheckoutPlan() {
+  const methods = ["Cartão", "MB Way", "Pix (BR)"];
   return (
     <View style={{ flex: 1, backgroundColor: BC.black, padding: 24, gap: 16 }}>
       <Text variant="H1" style={{ color: BC.white }}>
-        Agendar
+        Checkout do plano
       </Text>
       <Text variant="Body" style={{ color: BC.gray300 }}>
-        Passo 1 de 4 — Escolhe a unidade
+        Escolhe o método de pagamento:
       </Text>
 
-      {/* mock de unidades */}
-      {["Centro", "Arcozelo"].map((u) => (
+      {methods.map((m) => (
         <Pressable
-          key={u}
+          key={m}
           style={{
             backgroundColor: BC.ink,
-            padding: 16,
             borderRadius: 12,
             borderWidth: 1,
             borderColor: BC.gray700,
+            padding: 14,
           }}
         >
           <Text variant="H3" style={{ color: BC.white }}>
-            {u}
+            {m}
           </Text>
           <Text variant="Caption" style={{ color: BC.gray500 }}>
-            Hoje: disponibilidade moderada
+            Simulação — estado sucesso/erro a seguir
           </Text>
         </Pressable>
       ))}
 
-      {/* próximo passo será o Serviço */}
-      <Link href="/(tabs)/service" asChild>
+      {/* Sucesso */}
+      <Link href="/(admin)/plans" asChild>
+        <Pressable
+          style={{ backgroundColor: BC.success, padding: 14, borderRadius: 12 }}
+        >
+          <Text variant="H3" style={{ color: BC.black, textAlign: "center" }}>
+            Pagar (mock) — Sucesso
+          </Text>
+        </Pressable>
+      </Link>
+
+      {/* Erro */}
+      <Link href="/(admin)/plans" asChild>
         <Pressable
           style={{
-            marginTop: 8,
-            backgroundColor: BC.celeste,
+            borderWidth: 1,
+            borderColor: BC.error,
             padding: 14,
             borderRadius: 12,
           }}
         >
-          <Text variant="H3" style={{ color: BC.black, textAlign: "center" }}>
-            Continuar
+          <Text variant="H3" style={{ color: BC.error, textAlign: "center" }}>
+            Simular falha
           </Text>
         </Pressable>
       </Link>

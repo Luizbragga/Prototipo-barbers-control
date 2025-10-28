@@ -1,23 +1,22 @@
-// app/(tabs)/index.tsx
+// app/(tabs)/barber.tsx
 import { BC } from "@/app/theme";
 import { Text } from "@/components/Themed";
 import { Link } from "expo-router";
 import { Pressable, View } from "react-native";
 
-export default function AgendarStep1() {
+export default function AgendarStep3() {
   return (
     <View style={{ flex: 1, backgroundColor: BC.black, padding: 24, gap: 16 }}>
       <Text variant="H1" style={{ color: BC.white }}>
         Agendar
       </Text>
       <Text variant="Body" style={{ color: BC.gray300 }}>
-        Passo 1 de 4 — Escolhe a unidade
+        Passo 3 de 4 — Escolhe o barbeiro (opcional)
       </Text>
 
-      {/* mock de unidades */}
-      {["Centro", "Arcozelo"].map((u) => (
+      {["Rafa", "Gio", "Ana"].map((b) => (
         <Pressable
-          key={u}
+          key={b}
           style={{
             backgroundColor: BC.ink,
             padding: 16,
@@ -27,16 +26,15 @@ export default function AgendarStep1() {
           }}
         >
           <Text variant="H3" style={{ color: BC.white }}>
-            {u}
+            {b}
           </Text>
           <Text variant="Caption" style={{ color: BC.gray500 }}>
-            Hoje: disponibilidade moderada
+            Hoje: agenda 60% ocupada
           </Text>
         </Pressable>
       ))}
 
-      {/* próximo passo será o Serviço */}
-      <Link href="/(tabs)/service" asChild>
+      <Link href="/(tabs)/time" asChild>
         <Pressable
           style={{
             marginTop: 8,
