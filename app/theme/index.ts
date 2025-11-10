@@ -30,5 +30,8 @@ export const bcLight = {
     notification: BC.celeste600,
   },
 };
+export default function ThemeRoute() {
+  return null; // evita aviso do Expo Router
+}
 
 export { BC };

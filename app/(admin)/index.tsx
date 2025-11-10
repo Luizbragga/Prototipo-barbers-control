@@ -11,54 +11,69 @@ import { PeriodFilter } from "@/components/PeriodFilter";
 import { RevenueCard } from "@/components/RevenueCard";
 import { Text } from "@/components/Themed";
 import { VisibilityToggle } from "@/components/VisibilityToggle";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
-const router = useRouter();
-
-const formatLongDate = (d: Date) =>
-  new Intl.DateTimeFormat("pt-PT", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  })
-    .format(d)
-    .replace(/^./, (c) => c.toUpperCase());
-
-const [barbersOpen, setBarbersOpen] = useState(false);
-const barbers = ["Henrique", "Carlos", "Gustavo"]; //
-
 export default function AdminHome() {
-  // usuário logado (mock)
-  const userName = "Henrique";
+  const router = useRouter();
 
-  // visibilidade de valores
+  // FILTROS (botão único + resumo)
+  const [showFilters, setShowFilters] = useState(false);
+  type FilterState = {
+    type: "none" | "year" | "month" | "period";
+    value?: string;
+  };
+  const [filter, setFilter] = useState<FilterState>({ type: "none" });
+  const filterText = useMemo(() => {
+    switch (filter.type) {
+      case "none":
+        return "Filtros (nenhum aplicado)";
+      case "year":
+        return `Filtros (ano: ${filter.value})`;
+      case "month":
+        return `Filtros (mês: ${filter.value})`;
+      case "period":
+        return `Filtros (${filter.value})`;
+    }
+  }, [filter]);
+  const [unread, setUnread] = useState<number>(3); // mock; depois liga à tua store/api
+
+  // dropdown “Agenda dos barbeiros”
+  const [barbersOpen, setBarbersOpen] = useState(false);
+  const barbers = ["Henrique", "Carlos", "Gustavo"];
+
+  const formatLongDate = (d: Date) =>
+    new Intl.DateTimeFormat("pt-PT", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    })
+      .format(d)
+      .replace(/^./, (c) => c.toUpperCase());
+
+  const userName = "Henrique"; // mock usuario
   const [hideValues, setHideValues] = useState(false);
 
-  // filtro de barbeiro (padrão: o próprio admin-barbeiro)
   const myBarberName = "Henrique";
-  const [selectedBarberName, setSelectedBarberName] = useState(myBarberName);
+  const [selectedBarberName] = useState(myBarberName);
 
-  // dia (dashboard diário)
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [weekRange, setWeekRange] = useState<{ start: Date; end: Date } | null>(
     null
   );
-  // KPIs mock (ocupação mantém BCKPI que já ficou bom)
+
+  // KPIs mock
   const ocupacaoHoje = "60%";
   const deltaOcup = "+8% vs ontem";
-
-  // Faturamento previsto (soma dos agendamentos do admin no dia) e atual (mock caixa do admin no dia)
   const faturamentoPrevisto = "R$ 1.280";
   const faturamentoAtual = "R$ 840";
   const deltaFat = "+12% vs ontem";
-
-  // Não compareceu (semana)
   const noShowSemana = 3;
 
-  // Agenda mock (para o dia selecionado)
+  // Agenda “Agora/Próximos” mock
   const allNow: NowBooking[] = [
     {
       client: "Carlos Mendes",
@@ -103,29 +118,25 @@ export default function AdminHome() {
     },
   ];
 
-  // filtro: “Agora” e “Próximos” SOMENTE do barbeiro selecionado
   const nowForBarber = useMemo(
-    () => allNow.find((b) => b.barber === selectedBarberName),
-    [allNow, selectedBarberName]
+    () => allNow.find((b) => b.barber === myBarberName),
+    [allNow, myBarberName]
   );
   const nextForBarber = useMemo(
-    () => allNext.filter((b) => b.barber === selectedBarberName),
-    [allNext, selectedBarberName]
+    () => allNext.filter((b) => b.barber === myBarberName),
+    [allNext, myBarberName]
   );
-
-  // regra: só mostra ações se o booking atual é do admin e está marcado como “scheduled”
   const showActions =
-    selectedBarberName === myBarberName &&
     nowForBarber?.barber === myBarberName &&
     nowForBarber?.status === "scheduled";
 
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={styles.container} // garante espaço pro conteúdo
+      contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
-      {/* topo: saudação + menu + olhinho */}
+      {/* topo */}
       <View style={styles.topbar}>
         <Text variant="H1" style={{ color: BC.white }}>
           Olá, {userName}! 👋
@@ -134,7 +145,56 @@ export default function AdminHome() {
           <VisibilityToggle
             hidden={hideValues}
             onToggle={() => setHideValues((v) => !v)}
+            iconOnly
           />
+
+          {/* Sino de notificações */}
+          <Pressable
+            onPress={() => router.push("/(admin)/notifications")}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              backgroundColor: BC.ink,
+              alignItems: "center",
+              justifyContent: "center",
+              borderWidth: 1,
+              borderColor: BC.gray700,
+              position: "relative",
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Notificações"
+          >
+            <Ionicons
+              name={unread > 0 ? "notifications" : "notifications-outline"}
+              size={20}
+              color="#fff"
+            />
+
+            {unread > 0 && (
+              <View
+                style={{
+                  position: "absolute",
+                  top: -4,
+                  right: -4,
+                  minWidth: 18,
+                  height: 18,
+                  paddingHorizontal: 4,
+                  borderRadius: 9,
+                  backgroundColor: "#EF4444", // vermelho
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderWidth: 2,
+                  borderColor: BC.black,
+                }}
+              >
+                <Text variant="Caption" style={{ color: "#fff" }}>
+                  {unread > 99 ? "99+" : String(unread)}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+
           <MenuButton />
         </View>
       </View>
@@ -152,29 +212,97 @@ export default function AdminHome() {
         {formatLongDate(selectedDate)}
       </Text>
 
+      {/* filtros e atalhos do topo */}
       <View style={[styles.filterWrap, { marginTop: 8, marginBottom: 8 }]}>
-        <PeriodFilter
-          anchorDate={selectedDate}
-          onPickYear={(y) => {
-            const m = selectedDate.getMonth();
-            const max = new Date(y, m + 1, 0).getDate();
-            const day = Math.min(selectedDate.getDate(), max);
-            setSelectedDate(new Date(y, m, day));
-            setWeekRange(null);
-          }}
-          onPickMonth={(y, m) => {
-            const max = new Date(y, m + 1, 0).getDate();
-            const day = Math.min(selectedDate.getDate(), max);
-            setSelectedDate(new Date(y, m, day));
-            setWeekRange(null);
-          }}
-          onPickRange={(start, end) => {
-            // analisa período livre
-            setSelectedDate(start);
-            setWeekRange({ start, end });
-          }}
-          onOpenAnalytics={() => router.push("/(admin)/analytics")}
-        />
+        <Pressable
+          style={styles.filterToggle}
+          onPress={() => setShowFilters((v) => !v)}
+        >
+          <Text variant="Body" style={{ color: BC.white }}>
+            {filterText} ▾
+          </Text>
+        </Pressable>
+
+        {showFilters && (
+          <PeriodFilter
+            anchorDate={selectedDate}
+            onPickYear={(y) => {
+              const m = selectedDate.getMonth();
+              const max = new Date(y, m + 1, 0).getDate();
+              const day = Math.min(selectedDate.getDate(), max);
+              setSelectedDate(new Date(y, m, day));
+              setWeekRange(null);
+              setFilter({ type: "year", value: String(y) });
+            }}
+            onPickMonth={(y, m) => {
+              const max = new Date(y, m + 1, 0).getDate();
+              const day = Math.min(selectedDate.getDate(), max);
+              setSelectedDate(new Date(y, m, day));
+              setWeekRange(null);
+              const mm = String(m + 1).padStart(2, "0");
+              setFilter({ type: "month", value: `${mm}/${y}` });
+            }}
+            onPickRange={(start, end) => {
+              setSelectedDate(start);
+              setWeekRange({ start, end });
+              const a = start.toLocaleDateString();
+              const b = end.toLocaleDateString();
+              setFilter({ type: "period", value: `${a} – ${b}` });
+            }}
+            onOpenAnalytics={() => router.push("/(admin)/analytics")}
+          />
+        )}
+
+        <View style={styles.actionsRight}>
+          <Pressable
+            onPress={() => router.push("/(admin)/campaigns")}
+            style={styles.smallBtn}
+          >
+            <Text variant="Body" style={{ color: BC.black, fontWeight: "700" }}>
+              Analisar campanhas
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push("/(admin)/plans-analytics")}
+            style={styles.smallBtn}
+          >
+            <Text variant="Body" style={{ color: BC.black, fontWeight: "700" }}>
+              Analisar planos
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push("/(admin)/cash-open")}
+            style={styles.openCashBtn}
+          >
+            <Text variant="Body" style={{ color: BC.black, fontWeight: "700" }}>
+              Abrir caixa
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/(admin)/agenda",
+                params: { barber: myBarberName },
+              })
+            }
+            style={styles.smallBtn}
+          >
+            <Text variant="Body" style={{ color: BC.black, fontWeight: "700" }}>
+              Agenda da semana
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => router.push("/(admin)/loyalty")}
+            style={styles.smallBtn}
+          >
+            <Text variant="Body" style={{ color: BC.black, fontWeight: "700" }}>
+              Fidelidade
+            </Text>
+          </Pressable>
+        </View>
 
         {weekRange && (
           <View
@@ -194,8 +322,9 @@ export default function AdminHome() {
           </View>
         )}
       </View>
+
+      {/* dropdown Agenda dos barbeiros */}
       <View style={styles.controlsRow}>
-        {/* seu PeriodFilter já está aqui acima */}
         <View style={{ position: "relative" }}>
           <Pressable
             style={styles.btnOutline}
@@ -214,8 +343,6 @@ export default function AdminHome() {
                   style={styles.popItem}
                   onPress={() => {
                     setBarbersOpen(false);
-                    // Por ora só navegamos para uma rota futura (mock).
-                    // Quando quiser, criamos a tela / (admin) / barbers-agenda
                     router.push({
                       pathname: "/(admin)/barbers-agenda",
                       params: { barber: name },
@@ -232,7 +359,7 @@ export default function AdminHome() {
         </View>
       </View>
 
-      {/* seletor de dia (estilo inbarber) */}
+      {/* Dias */}
       <DayPicker date={selectedDate} onChange={setSelectedDate} />
 
       {/* KPIs */}
@@ -247,18 +374,18 @@ export default function AdminHome() {
         <NoShowCard count={noShowSemana} />
       </View>
 
-      {/* Agora (apenas do barbeiro logado por padrão) */}
+      {/* Agora */}
       <NowCard
         booking={nowForBarber}
         next={nextForBarber}
         showActions={showActions}
-        agendaBarber={selectedBarberName}
+        agendaBarber={myBarberName}
       />
 
-      {/* Horários clicáveis (para agendar rápido) */}
-      <HoursList date={selectedDate} barber={selectedBarberName} />
+      {/* Horários */}
+      <HoursList date={selectedDate} barber={myBarberName} />
 
-      {/* Atalhos + botão “Análise de planos e campanhas” */}
+      {/* Atalhos (embaixo) */}
       <View style={styles.shortcut}>
         <Text variant="H2" style={{ color: BC.white }}>
           Atalhos
@@ -267,16 +394,24 @@ export default function AdminHome() {
           Abrir caixa • Ver agenda • Criar campanha
         </Text>
 
-        <Pressable
-          onPress={() => {
-            /* rota mock; ajuste se já existir */
-          }}
-          style={styles.planBtn}
-        >
-          <Text variant="Body" style={{ color: BC.black, fontWeight: "700" }}>
-            Análise dos seus planos e campanhas
-          </Text>
-        </Pressable>
+        <View style={styles.planRow}>
+          <Pressable
+            onPress={() => router.push("/(admin)/campaigns")}
+            style={styles.planBtn}
+          >
+            <Text variant="Body" style={{ color: BC.black, fontWeight: "700" }}>
+              Analisar campanhas
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => router.push("/(admin)/plans-analytics")}
+            style={styles.planBtn}
+          >
+            <Text variant="Body" style={{ color: BC.black, fontWeight: "700" }}>
+              Analisar planos
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </ScrollView>
   );
@@ -284,7 +419,6 @@ export default function AdminHome() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BC.black, padding: 16, gap: 16 },
-  // 🔥 evita o recorte do dropdown dentro do ScrollView
   container: { padding: 16, gap: 16, paddingBottom: 160, overflow: "visible" },
 
   topbar: {
@@ -293,10 +427,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // 🔥 filtro sempre no topo da pilha
   filterWrap: { position: "relative", zIndex: 9999 },
 
-  // 🔻 blocos abaixo não sobrepõem o filtro
   kpis: {
     flexDirection: "row",
     gap: 16,
@@ -313,14 +445,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 10,
   },
-  planBtn: {
-    marginTop: 8,
-    alignSelf: "flex-start",
-    backgroundColor: BC.celeste,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-  },
+
   controlsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -359,8 +484,50 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
 
-  popItem: {
+  popItem: { paddingVertical: 10, paddingHorizontal: 12 },
+
+  planRow: { flexDirection: "row", gap: 10, flexWrap: "wrap", marginTop: 8 },
+  planBtn: {
+    marginTop: 8,
+    alignSelf: "flex-start",
+    backgroundColor: BC.celeste,
+    paddingHorizontal: 14,
     paddingVertical: 10,
-    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+
+  actionsRight: {
+    flexDirection: "row",
+    gap: 10,
+    flexWrap: "wrap",
+    marginTop: 8,
+    zIndex: 1,
+  },
+
+  smallBtn: {
+    backgroundColor: BC.celeste,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+  },
+
+  filterToggle: {
+    backgroundColor: BC.ink,
+    borderColor: BC.gray700,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    alignSelf: "flex-start",
+    marginBottom: 8,
+  },
+
+  openCashBtn: {
+    backgroundColor: BC.success,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignSelf: "flex-start",
   },
 });

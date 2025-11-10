@@ -1,46 +1,36 @@
-// components/VisibilityToggle.tsx
 import { BC } from "@/app/theme";
-import { Text } from "@/components/Themed";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { Pressable, Text } from "react-native";
 
-export function VisibilityToggle({
-  hidden,
-  onToggle,
-  label = "Ocultar valores",
-}: {
+type Props = {
   hidden: boolean;
   onToggle: () => void;
-  label?: string;
-}) {
+  iconOnly?: boolean; // se true, mostra só o ícone (sem texto)
+};
+
+export function VisibilityToggle({ hidden, onToggle, iconOnly }: Props) {
   return (
-    <Pressable onPress={onToggle} style={styles.wrap} hitSlop={8}>
-      <View
-        style={[
-          styles.pill,
-          hidden && {
-            backgroundColor: "transparent",
-            borderColor: BC.gray700,
-            borderWidth: 1,
-          },
-        ]}
-      >
-        <Text
-          variant="Caption"
-          style={{ color: hidden ? BC.gray300 : BC.white }}
-        >
-          {hidden ? "👁️‍🗨️ Mostrar" : "👁️ Ocultar"}
-        </Text>
-      </View>
+    <Pressable
+      onPress={onToggle}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        backgroundColor: BC.ink,
+        borderColor: BC.gray700,
+        borderWidth: 1,
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={hidden ? "Mostrar valores" : "Ocultar valores"}
+    >
+      <Ionicons name={hidden ? "eye" : "eye-off"} size={18} color="#fff" />
+      {!iconOnly && (
+        <Text style={{ color: "#fff" }}>{hidden ? "Mostrar" : "Ocultar"}</Text>
+      )}
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: { alignItems: "center", justifyContent: "center" },
-  pill: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.06)",
-  },
-});
